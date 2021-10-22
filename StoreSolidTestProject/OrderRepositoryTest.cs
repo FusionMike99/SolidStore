@@ -5,33 +5,80 @@ using StoreSolidConsoleApp.Context;
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using Moq;
 
 namespace TestProject1
 {
     [TestFixture]
     class OrderRepositoryTest
     {
+        private List<Order> orders;
+
+        [SetUp]
+        public void SetUp()
+        {
+            Product product1 = new Product("product1", "category1", "description1", 45.5F);
+            Product product2 = new Product("product2", "category1", "description2", 3F);
+            Product product3 = new Product("product3", "category2", "description3", 41F);
+            Product product4 = new Product("product4", "category2", "description4", 89.6F);
+            Product product5 = new Product("product5", "category3", "description5", 53F);
+
+            User user1 = new User("user1", "pa$$w0rd", "User1", "Userov1", "0981005060");
+            User user2 = new User("user2", "pa$$w0rd", "User2", "Userov2", "0972004070");
+
+            List<OrderItem> items1 = new List<OrderItem>()
+            {
+                new OrderItem(product1, 2),
+                new OrderItem(product2, 1)
+            };
+            List<OrderItem> items2 = new List<OrderItem>()
+            {
+                new OrderItem(product3, 4),
+                new OrderItem(product4, 3)
+            };
+            List<OrderItem> items3 = new List<OrderItem>()
+            {
+                new OrderItem(product5, 6),
+                new OrderItem(product1, 5)
+            };
+            List<OrderItem> items4 = new List<OrderItem>()
+            {
+                new OrderItem(product2, 8),
+                new OrderItem(product3, 7)
+            };
+
+            orders = new List<Order>()
+            {
+                new Order(items1, user1),
+                new Order(items2, user2),
+                new Order(items3, user1),
+                new Order(items4, user2)
+            };
+        }
+
         [Test]
         public void OrderRepository_GetAll_ReturnsEqual()
         {
             // Arrange
-            var arrangedContext = new StoreContext();
-            var repo = new CollectionOrderRepository(arrangedContext);
+            var mockContext = new Mock<StoreContext>();
+            mockContext.Setup(c => c.Orders).Returns(orders);
+            var repo = new CollectionOrderRepository(mockContext.Object);
 
             // Act
             var actualResult = repo.GetOrders();
 
             //Assert
-            CollectionAssert.AreEquivalent(arrangedContext.Orders, actualResult);
+            CollectionAssert.AreEquivalent(mockContext.Object.Orders, actualResult);
         }
 
         [Test]
         public void OrderRepository_GetByID_ReturnsEquals()
         {
             // Arrange
-            var arrangedContext = new StoreContext();
-            var expectedProduct = arrangedContext.Orders.ElementAt(0);
-            var repo = new CollectionOrderRepository(arrangedContext);
+            var mockContext = new Mock<StoreContext>();
+            mockContext.Setup(c => c.Orders).Returns(orders);
+            var expectedProduct = mockContext.Object.Orders[0];
+            var repo = new CollectionOrderRepository(mockContext.Object);
 
             // Act
             var actualResult = repo.GetOrderByID(expectedProduct.ID.ToString());
@@ -46,8 +93,9 @@ namespace TestProject1
         public void OrderRepository_GetByID_ShouldThrowArgumentException(string id)
         {
             // Arrange
-            var arrangedContext = new StoreContext();
-            var repo = new CollectionOrderRepository(arrangedContext);
+            var mockContext = new Mock<StoreContext>();
+            mockContext.Setup(c => c.Orders).Returns(orders);
+            var repo = new CollectionOrderRepository(mockContext.Object);
             var expectedEx = typeof(ArgumentException);
 
             //Act
@@ -62,9 +110,10 @@ namespace TestProject1
         public void OrderRepository_GetUserOrders_ReturnsEqual(string login)
         {
             // Arrange
-            var arrangedContext = new StoreContext();
-            var repo = new CollectionOrderRepository(arrangedContext);
-            var expectedCollection = arrangedContext.Orders.Where(i => i.User.Login == login);
+            var mockContext = new Mock<StoreContext>();
+            mockContext.Setup(c => c.Orders).Returns(orders);
+            var repo = new CollectionOrderRepository(mockContext.Object);
+            var expectedCollection = mockContext.Object.Orders.Where(i => i.User.Login == login);
 
             // Act
             var actualResult = repo.GetUserOrders(login);
@@ -78,8 +127,9 @@ namespace TestProject1
         public void OrderRepository_GetUserOrders_ShouldThrowArgumentNullException(string login)
         {
             // Arrange
-            var arrangedContext = new StoreContext();
-            var repo = new CollectionOrderRepository(arrangedContext);
+            var mockContext = new Mock<StoreContext>();
+            mockContext.Setup(c => c.Orders).Returns(orders);
+            var repo = new CollectionOrderRepository(mockContext.Object);
             var expectedEx = typeof(ArgumentNullException);
 
             //Act
@@ -93,8 +143,9 @@ namespace TestProject1
         public void OrderRepository_AfterInsert_LengthOfCollectionsEquivalents()
         {
             // Arrange
-            var arrangedContext = new StoreContext();
-            var repo = new CollectionOrderRepository(arrangedContext);
+            var mockContext = new Mock<StoreContext>();
+            mockContext.Setup(c => c.Orders).Returns(orders);
+            var repo = new CollectionOrderRepository(mockContext.Object);
             Product product1 = new Product("product1", "category1", "description1", 45.5F);
             User user1 = new User("user1", "pa$$w0rd", "User1", "Userov1", "0981005060");
             List<OrderItem> items1 = new List<OrderItem>()
@@ -102,7 +153,7 @@ namespace TestProject1
                 new OrderItem(product1, 5)
             };
             var arrangedOrder = new Order(items1, user1);
-            var expectedLength = arrangedContext.Orders.ToList().Count + 1;
+            var expectedLength = mockContext.Object.Orders.Count + 1;
 
             // Act
             repo.InsertOrder(arrangedOrder);
@@ -116,8 +167,9 @@ namespace TestProject1
         public void OrderRepository_InsertNull_ShouldThrowArgumentNullException()
         {
             // Arrange
-            var arrangedContext = new StoreContext();
-            var repo = new CollectionOrderRepository(arrangedContext);
+            var mockContext = new Mock<StoreContext>();
+            mockContext.Setup(c => c.Orders).Returns(orders);
+            var repo = new CollectionOrderRepository(mockContext.Object);
             var expectedEx = typeof(ArgumentNullException);
 
             //Act
@@ -131,8 +183,9 @@ namespace TestProject1
         public void OrderRepository_InsertInvalidData_ShouldThrowArgumentException()
         {
             // Arrange
-            var arrangedContext = new StoreContext();
-            var repo = new CollectionOrderRepository(arrangedContext);
+            var mockContext = new Mock<StoreContext>();
+            mockContext.Setup(c => c.Orders).Returns(orders);
+            var repo = new CollectionOrderRepository(mockContext.Object);
             var arrangedOrder = new Order(null, null);
             var expectedEx = typeof(ArgumentException);
 
@@ -152,9 +205,10 @@ namespace TestProject1
         public void OrderRepository_AfterUpdateStatus_ObjectsAreEqual(OrderStatus status)
         {
             // Arrange
-            var arrangedContext = new StoreContext();
-            var repo = new CollectionOrderRepository(arrangedContext);
-            var id = arrangedContext.Orders.ElementAt(0).ID.ToString();
+            var mockContext = new Mock<StoreContext>();
+            mockContext.Setup(c => c.Orders).Returns(orders);
+            var repo = new CollectionOrderRepository(mockContext.Object);
+            var id = mockContext.Object.Orders[0].ID.ToString();
 
             // Act
             repo.UpdateOrderStatus(id, status);

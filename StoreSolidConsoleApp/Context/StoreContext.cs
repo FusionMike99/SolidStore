@@ -7,9 +7,9 @@ namespace StoreSolidConsoleApp.Context
 {
     public partial class StoreContext
     {
-        public List<Product> Products { get; private set; }
-        public List<User> Users { get; private set; }
-        public List<Order> Orders { get; private set; }
+        public virtual List<Product> Products { get; set; }
+        public virtual List<User> Users { get; set; }
+        public virtual List<Order> Orders { get; set; }
 
         public StoreContext()
         {
